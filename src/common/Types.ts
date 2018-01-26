@@ -20,7 +20,7 @@ export type ReactNode = React.ReactNode;
 // depends on using a platform specific React library (web vs native). Thus, we need an interface to abstract
 // this detail away from the components' common implementation.
 export type ReactInterface = {
-    createElement<P>(type: string, props?: P, ...children: React.ReactNode[]): React.ReactElement<P>;
+    createElement<P>(type: string, props?: P, ...children: ReactNode[]): React.ReactElement<P>;
 };
 
 //------------------------------------------------------------
@@ -87,25 +87,30 @@ export interface FlexboxChildrenStyle {
 export interface FlexboxStyle extends FlexboxParentStyle, FlexboxChildrenStyle {
 }
 
-export abstract class AnimatedValue implements RX.IAnimatedValue {
+export type InterpolationConfig = {
+    inputRange: number[];
+    outputRange: number[] | string[];
+};
+
+export abstract class AnimatedValue {
     constructor(val: number) {
         // No-op
     }
     abstract setValue(value: number): void;
-    abstract addListener(callback: any): string;
-    abstract removeListener(id: string): void;
-    abstract removeAllListeners(): void;
-    abstract interpolate(config: any): AnimatedValue;
+    abstract interpolate(config: InterpolationConfig): InterpolatedValue;
+}
+
+export abstract class InterpolatedValue {
 }
 
 export interface AnimatedFlexboxStyle {
-    height?: AnimatedValue;
-    width?: AnimatedValue;
+    height?: AnimatedValue|InterpolatedValue;
+    width?: AnimatedValue|InterpolatedValue;
 
-    top?: AnimatedValue;
-    right?: AnimatedValue;
-    bottom?: AnimatedValue;
-    left?: AnimatedValue;
+    top?: AnimatedValue|InterpolatedValue;
+    right?: AnimatedValue|InterpolatedValue;
+    bottom?: AnimatedValue|InterpolatedValue;
+    left?: AnimatedValue|InterpolatedValue;
 }
 
 // ------------------------------------------------------------
@@ -113,7 +118,7 @@ export interface AnimatedFlexboxStyle {
 // ------------------------------------------------------------
 
 export interface TransformStyle {
-    transform?: [{
+    transform?: {
         perspective?: number;
         rotate?: string;
         rotateX?: string;
@@ -124,22 +129,22 @@ export interface TransformStyle {
         scaleY?: number;
         translateX?: number;
         translateY?: number;
-    }];
+    }[];
 }
 
 export interface AnimatedTransformStyle {
-    transform?: [{
-        perspective?: AnimatedValue;
-        rotate?: AnimatedValue;
-        rotateX?: AnimatedValue;
-        rotateY?: AnimatedValue;
-        rotateZ?: AnimatedValue;
-        scale?: AnimatedValue;
-        scaleX?: AnimatedValue;
-        scaleY?: AnimatedValue;
-        translateX?: AnimatedValue;
-        translateY?: AnimatedValue;
-    }];
+    transform?: {
+        perspective?: AnimatedValue|InterpolatedValue;
+        rotate?: AnimatedValue|InterpolatedValue;
+        rotateX?: AnimatedValue|InterpolatedValue;
+        rotateY?: AnimatedValue|InterpolatedValue;
+        rotateZ?: AnimatedValue|InterpolatedValue;
+        scale?: AnimatedValue|InterpolatedValue;
+        scaleX?: AnimatedValue|InterpolatedValue;
+        scaleY?: AnimatedValue|InterpolatedValue;
+        translateX?: AnimatedValue|InterpolatedValue;
+        translateY?: AnimatedValue|InterpolatedValue;
+    }[];
 }
 
 export type StyleRuleSet<T> = T | number | undefined;
@@ -165,9 +170,9 @@ export interface ViewAndImageCommonStyle extends FlexboxStyle, TransformStyle {
 }
 
 export interface AnimatedViewAndImageCommonStyle extends AnimatedFlexboxStyle, AnimatedTransformStyle {
-    borderRadius?: AnimatedValue;
-    backgroundColor?: AnimatedValue;
-    opacity?: AnimatedValue;
+    borderRadius?: AnimatedValue|InterpolatedValue;
+    backgroundColor?: InterpolatedValue;
+    opacity?: AnimatedValue|InterpolatedValue;
 }
 
 // ------------------------------------------------------------
@@ -279,8 +284,8 @@ export interface TextStyle extends ViewStyle {
 export type TextStyleRuleSet = StyleRuleSet<TextStyle>;
 
 export interface AnimatedTextStyle extends AnimatedViewAndImageCommonStyle {
-    color?: AnimatedValue;
-    fontSize?: AnimatedValue;
+    color?: InterpolatedValue;
+    fontSize?: AnimatedValue|InterpolatedValue;
 }
 
 export type AnimatedTextStyleRuleSet = StyleRuleSet<AnimatedTextStyle>;
@@ -295,8 +300,8 @@ export interface TextInputStyle extends TextStyle {
 export type TextInputStyleRuleSet = StyleRuleSet<TextInputStyle>;
 
 export interface AnimatedTextInputStyle extends AnimatedViewAndImageCommonStyle {
-    color?: AnimatedValue;
-    fontSize?: AnimatedValue;
+    color?: InterpolatedValue;
+    fontSize?: AnimatedValue|InterpolatedValue;
 }
 
 export type AnimatedTextInputStyleRuleSet = StyleRuleSet<AnimatedTextInputStyle>;
@@ -346,7 +351,7 @@ export interface CommonProps {
     ref?: string | ((obj: ComponentBase | null) => void);
     key?: string | number;
     type?: any;
-    children?: React.ReactNode | React.ReactNode[];
+    children?: ReactNode | ReactNode[];
 }
 
 export interface Stateless {}
@@ -388,6 +393,7 @@ export interface AccessibilityHtmlAttributes extends React.HTMLAttributes<any> {
     'aria-haspopup'?: boolean;
     'aria-controls'?: string;
     'aria-labelledby'?: string;
+    'aria-roledescription'?: string;
 }
 
 // Android & Desktop supported prop, which allows screen-reader to inform its users when a
@@ -447,6 +453,7 @@ export enum AccessibilityTrait {
     Dialog,
     HasPopup,
     Option,
+    Switch,
 
     // Desktop & mobile. This is at the end because this
     // is the highest priority trait.
@@ -460,10 +467,8 @@ export interface CommonStyledProps<T> extends CommonProps {
 // Button
 export interface ButtonProps extends CommonStyledProps<ButtonStyleRuleSet>, CommonAccessibilityProps {
     title?: string;
-    children?: ReactNode;
     disabled?: boolean;
     delayLongPress?: number;
-    cursor?: string;
 
     onAccessibilityTapIOS?: Function; // iOS-only prop, call when a button is double tapped in accessibility mode
     onContextMenu?: (e: SyntheticEvent) => void;
@@ -507,7 +512,6 @@ export interface ImagePropsShared extends CommonProps {
     source: string;
     headers?: { [headerName: string]: string };
     accessibilityLabel?: string;
-    children?: ReactNode;
     resizeMode?: 'stretch' | 'contain' | 'cover' | 'auto' | 'repeat';
 
     resizeMethod?: 'auto' | 'resize' | 'scale'; // Android only
@@ -537,7 +541,6 @@ export interface AnimatedImageProps extends ImagePropsShared {
 // | important   |
 // | example     |
 export interface TextPropsShared extends CommonProps {
-    children?: ReactNode;
     selectable?: boolean;
     numberOfLines?: number;
 
@@ -557,9 +560,6 @@ export interface TextPropsShared extends CommonProps {
     textBreakStrategy?: 'highQuality' | 'simple' | 'balanced';
 
     importantForAccessibility?: ImportantForAccessibility;
-
-    // Android only
-    elevation?: number;
 
     onPress?: (e: SyntheticEvent) => void;
 
@@ -584,7 +584,6 @@ export interface ViewPropsShared extends CommonProps, CommonAccessibilityProps {
     blockPointerEvents?: boolean; // Native-only prop for disabling touches on self and all child views
     shouldRasterizeIOS?: boolean; // iOS-only prop, if view should be rendered as a bitmap before compositing
     viewLayerTypeAndroid?: ViewLayerType; // Android only property
-    children?: ReactNode;
 
     restrictFocusWithin?: boolean; // Web-only, during the keyboard navigation, the focus will not go outside this view
     limitFocusWithin?: boolean; // Web-only, make the view and all focusable subelements not focusable when isFocusLimited state is true
@@ -592,6 +591,7 @@ export interface ViewPropsShared extends CommonProps, CommonAccessibilityProps {
     importantForLayout?: boolean; // Web-only, additional invisible DOM elements will be added to track the size changes faster
     id?: string; // Web-only. Needed for accessibility.
     ariaLabelledBy?: string; // Web-only. Needed for accessibility.
+    ariaRoleDescription?: string; // Web-only. Needed for accessibility.
     accessibilityLiveRegion?: AccessibilityLiveRegion; // Android and web only
 
     // There are a couple of constraints when child animations are enabled:
@@ -626,19 +626,19 @@ export interface ViewPropsShared extends CommonProps, CommonAccessibilityProps {
 
 export interface ViewProps extends ViewPropsShared {
     style?:  StyleRuleSetRecursive<ViewStyleRuleSet>;
-    onContextMenu?: (e: React.SyntheticEvent<any>) => void;
-    onStartShouldSetResponder?: (e: React.SyntheticEvent<any>) => boolean;
-    onMoveShouldSetResponder?: (e: React.SyntheticEvent<any>) => boolean;
-    onStartShouldSetResponderCapture?: (e: React.SyntheticEvent<any>) => boolean;
-    onMoveShouldSetResponderCapture?: (e: React.SyntheticEvent<any>) => boolean;
-    onResponderGrant?: (e: React.SyntheticEvent<any>) => void;
-    onResponderReject?: (e: React.SyntheticEvent<any>) => void;
-    onResponderRelease?: (e: React.SyntheticEvent<any>) => void;
-    onResponderStart?: (e: React.TouchEvent<any>) => void;
-    onResponderMove?: (e: React.TouchEvent<any>) => void;
-    onResponderEnd?: (e: React.TouchEvent<any>) => void;
-    onResponderTerminate?: (e: React.SyntheticEvent<any>) => void;
-    onResponderTerminationRequest?: (e: React.SyntheticEvent<any>) => boolean;
+    onContextMenu?: (e: SyntheticEvent) => void;
+    onStartShouldSetResponder?: (e: SyntheticEvent) => boolean;
+    onMoveShouldSetResponder?: (e: SyntheticEvent) => boolean;
+    onStartShouldSetResponderCapture?: (e: SyntheticEvent) => boolean;
+    onMoveShouldSetResponderCapture?: (e: SyntheticEvent) => boolean;
+    onResponderGrant?: (e: SyntheticEvent) => void;
+    onResponderReject?: (e: SyntheticEvent) => void;
+    onResponderRelease?: (e: SyntheticEvent) => void;
+    onResponderStart?: (e: TouchEvent) => void;
+    onResponderMove?: (e: TouchEvent) => void;
+    onResponderEnd?: (e: TouchEvent) => void;
+    onResponderTerminate?: (e: SyntheticEvent) => void;
+    onResponderTerminationRequest?: (e: SyntheticEvent) => boolean;
 }
 
 export interface AnimatedViewProps extends ViewPropsShared {
@@ -809,6 +809,9 @@ export interface ScrollViewProps extends ViewProps {
 
     // iOS-only property to control scroll indicator insets
     scrollIndicatorInsets?: ScrollIndicatorInsets;
+
+    // Windows-only property to control tab navigation inside the view
+    tabNavigation?: 'local' | 'cycle' | 'once';
 }
 
 // Link
@@ -843,7 +846,6 @@ export interface TextInputPropsShared extends CommonProps, CommonAccessibilityPr
     placeholderTextColor?: string;
     secureTextEntry?: boolean;
     value?: string;
-    textAlign?: 'auto' | 'left' | 'right' | 'center' | 'justify';
 
      // Should fonts be scaled according to system setting? Defaults
     // to true. iOS and Android only.
@@ -867,9 +869,6 @@ export interface TextInputPropsShared extends CommonProps, CommonAccessibilityPr
     // iOS and Android only property for controlling the text input selection color
     selectionColor?: string;
 
-    // macOS only property for submitting the text on enter
-    submitTextOnEnter?: boolean;
-
     onKeyPress?: (e: KeyboardEvent) => void;
     onFocus?: (e: FocusEvent) => void;
     onBlur?: (e: FocusEvent) => void;
@@ -877,7 +876,7 @@ export interface TextInputPropsShared extends CommonProps, CommonAccessibilityPr
     onChangeText?: (newValue: string) => void;
     onSelectionChange?: (start: number, end: number) => void;
     onSubmitEditing?: () => void;
-    onScroll?: (newScrollTop: number, newScrollLeft: number) => void;
+    onScroll?: (newScrollLeft: number, newScrollTop: number) => void;
 }
 
 export interface TextInputProps extends TextInputPropsShared {
@@ -924,8 +923,14 @@ export enum WebViewSandboxMode {
     AllowTopNavigation = 1 << 9
 }
 
+export interface WebViewSource {
+    html: string;
+    baseUrl?: string;
+}
+
 export interface WebViewProps extends CommonStyledProps<WebViewStyleRuleSet> {
-    url: string;
+    url?: string;
+    source?: WebViewSource;
     headers?: { [key: string]: string };
     onLoad?: (e: SyntheticEvent) => void;
     onNavigationStateChange?: (navigationState: WebViewNavigationState) => void;
@@ -938,7 +943,8 @@ export interface WebViewProps extends CommonStyledProps<WebViewStyleRuleSet> {
     domStorageEnabled?: boolean;
     onShouldStartLoadWithRequest?: (shouldStartLoadEvent: WebViewShouldStartLoadEvent) => boolean;
     onLoadStart?: (e: SyntheticEvent) => void;
-    onError?: (s: SyntheticEvent) => void;
+    onError?: (e: SyntheticEvent) => void;
+    onMessage?: (e: WebViewMessageEvent) => void;
 
     // Web only; overrides javaScriptEnabled if used
     sandbox?: WebViewSandboxMode;
@@ -1086,7 +1092,8 @@ export module Animated {
         outputRange: (number | string)[];
     }
 
-    export type TimingFunction = (value: RX.IAnimatedValue, config: TimingAnimationConfig) => CompositeAnimation;
+    export type TimingFunction = (value: RX.Types.AnimatedValue|RX.Types.InterpolatedValue,
+        config: TimingAnimationConfig) => CompositeAnimation;
     export var timing: TimingFunction;
 
     export type SequenceFunction = (animations: Array<CompositeAnimation>) => CompositeAnimation;
@@ -1119,13 +1126,25 @@ export module Animated {
 //
 // Events
 // ----------------------------------------------------------------------
-export type SyntheticEvent = React.SyntheticEvent<any>;
-
-export type DragEvent = React.DragEvent<any>;
-export type ClipboardEvent = React.ClipboardEvent<any>;
-export type FocusEvent = React.FocusEvent<any>;
-export type FormEvent = React.FormEvent<any>;
-export type MouseEvent = React.MouseEvent<any>;
+export type SyntheticEvent = {
+    readonly bubbles: boolean;
+    readonly cancelable: boolean;
+    readonly defaultPrevented: boolean;
+    readonly timeStamp: number;
+    readonly currentTarget: EventTarget;
+    readonly nativeEvent: any; // Platform-specific
+    preventDefault(): void;
+    stopPropagation(): void;
+};
+export interface ClipboardEvent extends SyntheticEvent {
+    clipboardData: DataTransfer;
+}
+export type FocusEvent = SyntheticEvent;
+export type FormEvent = SyntheticEvent;
+export type MouseEvent = SyntheticEvent;
+export interface DragEvent extends MouseEvent {
+    dataTransfer: DataTransfer;
+}
 
 export interface Touch {
     identifier: number;
@@ -1147,7 +1166,7 @@ export interface TouchList {
     identifiedTouch(identifier: number): Touch;
 }
 
-export interface TouchEvent extends React.SyntheticEvent<any> {
+export interface TouchEvent extends SyntheticEvent {
     // We override this definition because the public
     // type excludes location and page fields.
     altKey: boolean;
@@ -1163,8 +1182,12 @@ export interface TouchEvent extends React.SyntheticEvent<any> {
     pageY?: number;
     touches: TouchList;
 }
-export type UIEvent = React.UIEvent<any>;
-export type WheelEvent = React.WheelEvent<any>;
+export interface WheelEvent extends SyntheticEvent {
+    deltaMode: number;
+    deltaX: number;
+    deltaY: number;
+    deltaZ: number;
+}
 
 export interface WebViewShouldStartLoadEvent extends SyntheticEvent {
     url: string;
@@ -1184,6 +1207,7 @@ export type ViewOnLayoutEvent = {
     height: number;
     width: number;
 };
+
 export interface KeyboardEvent extends SyntheticEvent {
     ctrlKey: boolean;
     altKey: boolean;
@@ -1191,6 +1215,11 @@ export interface KeyboardEvent extends SyntheticEvent {
     keyCode: number;
     metaKey: boolean;
     key: string;
+}
+
+export interface WebViewMessageEvent extends SyntheticEvent {
+    data: string;
+    origin: string;
 }
 
 //

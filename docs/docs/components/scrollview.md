@@ -7,7 +7,7 @@ permalink: docs/components/scrollview.html
 next: components/text
 ---
 
-Like a View, this component is a container for other components. However, it supports scrolling (panning) and zooming so it is possible to view larger contents. 
+Like a View, this component is a container for other components. However, it supports scrolling (panning) and zooming so it is possible to view larger contents.
 
 ScrollViews must have a bounded height (or width, if it scrolls horizontally) since its children are of unbounded height (or width). To bound the dimensions of a ScrollView, either set the height/width directly or make sure that its parent's height/width is bounded.
 
@@ -20,7 +20,7 @@ bounces: boolean = true; // iOS only
 horizontal: boolean = false;
 vertical: boolean = true;
 
-// If the contents are smaller than the view port, should they be justified 
+// If the contents are smaller than the view port, should they be justified
 // to the top of the view (i.e. flex-start) or the end (flex-end)?
 justifyEnd: boolean = false;
 
@@ -30,12 +30,6 @@ keyboardDismissMode: 'none' | 'interactive' | 'on-drag'; // Native only
 // Should the on-screen keyboard remain visible when the user taps
 // the scroll view?
 keyboardShouldPersistTaps: boolean = false; // Native only
-
-// Maximum scale factor
-maximumZoomScale: number = 1.0;
-
-// Minimum scale factor
-minimumZoomScale: number = 1.0;
 
 // Invoked when the contents of the scroll view change
 onContentSizeChange: (width: number, height: number) => void = undefined;
@@ -60,8 +54,12 @@ snapToInterval: number = undefined; // iOS only
 // Is scrolling enabled?
 scrollEnabled: boolean = true;
 
-// how often (in milliseconds) between scroll events?
+// Minimum duration (in milliseconds) between scroll events
 scrollEventThrottle: number = undefined;
+
+// Inset (in pixels) of scroll indicator from top/bottom (vertical)
+// or left/right (horizontal)
+scrollIndicatorInsets: ScrollIndicatorInsets = undefined;
 
 // If true, this scroll bar scrolls to the top when the user
 // taps on the status bar.
@@ -73,6 +71,9 @@ showsVerticalScrollIndicator: boolean = [same as horizontal];
 
 // See below for supported styles
 style: ViewStyleRuleSet | ViewStyleRuleSet[] = [];
+
+// Windows-only property to control tab navigation inside the view
+tabNavigation?: 'local' | 'cycle' | 'once';
 ```
 
 ## Styles

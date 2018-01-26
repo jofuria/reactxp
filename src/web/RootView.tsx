@@ -65,6 +65,9 @@ export interface RootViewState {
 
     // Screen Reader text to be announced.
     announcementText: string;
+
+    // Render announcementText in a nested div to work around browser quirks
+    announcementTextInNestedDiv: boolean;
 }
 
 // Width of the "alley" around popups so they don't get too close to the boundary of the window.
@@ -107,6 +110,7 @@ export class RootView extends React.Component<RootViewProps, RootViewState> {
         focusManager: PropTypes.object
     };
 
+    private _mountedComponent: HTMLDivElement|null = null;
     private _hidePopupTimer: number|undefined;
     private _respositionPopupTimer: number|undefined;
     private _clickHandlerInstalled = false;
@@ -130,8 +134,12 @@ export class RootView extends React.Component<RootViewProps, RootViewState> {
                     announcement += ' ';
                 }
 
+                // Additionally, alternate between announcement text directly under the aria-live element and
+                // nested in a div to work around issues with some browsers. Chrome on Windows is known to
+                // not fire accessibility events reliably without this, for example.
                 this.setState({
-                    announcementText: announcement
+                    announcementText: announcement,
+                    announcementTextInNestedDiv: !this.state.announcementTextInNestedDiv
                 });
         });
 
@@ -162,7 +170,8 @@ export class RootView extends React.Component<RootViewProps, RootViewState> {
             constrainedPopupHeight: 0,
             isMouseInPopup: false,
             focusClass: this.props.mouseFocusOutline,
-            announcementText: ''
+            announcementText: '',
+            announcementTextInNestedDiv: false
         };
     }
 
@@ -278,7 +287,7 @@ export class RootView extends React.Component<RootViewProps, RootViewState> {
             optionalPopup = (
                 <div
                     style={ popupContainerStyle }
-                    ref='popupContainer'
+                    ref={ this._onMount }
                     onMouseEnter={ e => this._onMouseEnter(e) }
                     onMouseLeave={ e => this._onMouseLeave(e) }
                 >
@@ -298,6 +307,10 @@ export class RootView extends React.Component<RootViewProps, RootViewState> {
             );
         }
 
+        let announcement: any = this.state.announcementTextInNestedDiv ?
+            ( <div> { this.state.announcementText } </div> ) :
+            this.state.announcementText;
+
         return (
             <div
                 className={ this.state.focusClass }
@@ -310,20 +323,21 @@ export class RootView extends React.Component<RootViewProps, RootViewState> {
                     style={ _styles.liveRegionContainer as any }
                     aria-live={ AccessibilityUtil.accessibilityLiveRegionToString(Types.AccessibilityLiveRegion.Polite) }
                     aria-atomic={ 'true' }
+                    aria-relevant={ 'text' }
                 >
-                    { this.state.announcementText }
+                    { announcement }
                 </div>
             </div>
         );
     }
 
+    protected _onMount = (component: HTMLDivElement|null) => {
+        this._mountedComponent = component;
+    }
+
     private _tryClosePopup = (e: MouseEvent) => {
         // Dismiss a visible popup if there's a click outside.
-        const reactPopupContainer = this.refs['popupContainer'];
-        if (!reactPopupContainer) {
-            return;
-        }
-        let popupContainer = ReactDOM.findDOMNode(reactPopupContainer);
+        const popupContainer = this._mountedComponent;
         if (!popupContainer) {
             return;
         }
@@ -520,12 +534,8 @@ export class RootView extends React.Component<RootViewProps, RootViewState> {
         let newState: RootViewState = _.extend({}, this.state);
 
         if (this.state.isMeasuringPopup) {
-            const popupContainer = this.refs['popupContainer'];
-            if (!popupContainer) {
-                return;
-            }
             // Get the width/height of the popup.
-            let popup = ReactDOM.findDOMNode(popupContainer) as HTMLElement;
+            const popup = this._mountedComponent;
             if (!popup) {
                 return;
             }

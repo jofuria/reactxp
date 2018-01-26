@@ -15,28 +15,43 @@ import RX = require('../common/Interfaces');
 import Types = require('../common/Types');
 
 export class Link extends React.Component<Types.LinkProps, {}> {
+    protected _mountedComponent: RN.ReactNativeBaseComponent<any, any>|null = null;
+
     // To be able to use Link inside TouchableHighlight/TouchableOpacity
     public setNativeProps(nativeProps: RN.TextProps) {
-        (this.refs['nativeLink'] as any).setNativeProps(nativeProps);
+        if (this._mountedComponent) {
+            this._mountedComponent.setNativeProps(nativeProps);
+        }
     }
 
     render() {
+        let internalProps: RN.TextProps = {
+            ref: this._onMount,
+            style: this.props.style,
+            numberOfLines: this.props.numberOfLines === 0 ? undefined : this.props.numberOfLines,
+            onPress: this._onPress,
+            onLongPress: this._onLongPress,
+            allowFontScaling: this.props.allowFontScaling,
+            maxContentSizeMultiplier: this.props.maxContentSizeMultiplier,
+            children: this.props.children
+        };
+
+        return this._render(internalProps);
+    }
+
+    protected _render(internalProps: RN.TextProps) {
         return (
             <RN.Text
-                style={ this.props.style }
-                ref='nativeLink'
-                numberOfLines={ this.props.numberOfLines === 0 ? undefined : this.props.numberOfLines }
-                onPress={ this._onPress }
-                onLongPress={ this._onLongPress }
-                allowFontScaling={ this.props.allowFontScaling }
-                maxContentSizeMultiplier={ this.props.maxContentSizeMultiplier }
-            >
-                { this.props.children }
-            </RN.Text>
+                { ...internalProps }
+            />
         );
     }
 
-    private _onPress = (e: RX.Types.SyntheticEvent) => {
+    protected _onMount = (component: RN.ReactNativeBaseComponent<any, any>|null) => {
+        this._mountedComponent = component;
+    }
+
+    protected _onPress = (e: RX.Types.SyntheticEvent) => {
         if (this.props.onPress) {
             this.props.onPress(e, this.props.url);
             return;
@@ -50,11 +65,11 @@ export class Link extends React.Component<Types.LinkProps, {}> {
         }
     }
 
-    private _onLongPress = (e: RX.Types.SyntheticEvent) => {
+    protected _onLongPress = (e: RX.Types.SyntheticEvent) => {
         if (this.props.onLongPress) {
             this.props.onLongPress(e, this.props.url);
         }
-    }    
+    }
 }
 
 export default Link;

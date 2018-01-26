@@ -15,7 +15,7 @@ import Types = require('../common/Types');
 
 // Map of accessibility trait to an aria role attribute.  
 // What's a role attribute? https://www.w3.org/wiki/PF/XTech/HTML5/RoleAttribute
-const roleMap = {
+const roleMap: { [key: string]: string } = {
     [Types.AccessibilityTrait.None]: 'presentation',
     [Types.AccessibilityTrait.Button]: 'button',
     [Types.AccessibilityTrait.Link]: 'link',
@@ -37,11 +37,12 @@ const roleMap = {
     [Types.AccessibilityTrait.ComboBox]: 'combobox',
     [Types.AccessibilityTrait.Log]: 'log',
     [Types.AccessibilityTrait.Status]: 'status',
-    [Types.AccessibilityTrait.Dialog]: 'dialog'
+    [Types.AccessibilityTrait.Dialog]: 'dialog',
+    [Types.AccessibilityTrait.Switch]: 'switch'
 }; 
 
 // Map of accesssibility live region to an aria-live property.
-const liveRegionMap = {
+const liveRegionMap: { [key: string]: string } = {
     [Types.AccessibilityLiveRegion.None]: 'off',
     [Types.AccessibilityLiveRegion.Assertive]: 'assertive',
     [Types.AccessibilityLiveRegion.Polite]: 'polite'

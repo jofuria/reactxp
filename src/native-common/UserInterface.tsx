@@ -23,10 +23,9 @@ export class UserInterface extends RX.UserInterface {
 
     constructor() {
         super();
-
-        RN.DeviceEventEmitter.addListener('didUpdateDimensions', (newValue: RN.DimensionType) => {
-            this.contentSizeMultiplierChangedEvent.fire(newValue.fontScale);
-        });
+        RN.Dimensions.addEventListener('change', (event) => {
+            this.contentSizeMultiplierChangedEvent.fire(event.window.fontScale);
+        });        
     }
 
     measureLayoutRelativeToWindow(component: React.Component<any, any>):
@@ -148,7 +147,12 @@ export class UserInterface extends RX.UserInterface {
         RN.AppRegistry.registerComponent(viewKey, () => {
             class RootViewWrapper extends React.Component<any, any> {
                 render() {
-                    return <RootViewUsingProps reactxp_mainViewType={ getComponentFunc() } {...this.props} />;
+                    return (
+                        <RootViewUsingProps
+                            reactxp_mainViewType={ getComponentFunc() }
+                            { ...this.props }
+                        />
+                    );
                 }
             }
 

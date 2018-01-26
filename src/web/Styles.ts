@@ -9,6 +9,7 @@
 
 import _ = require('./utils/lodashMini');
 
+import AppConfig from '../common/AppConfig';
 import RX = require('../common/Interfaces');
 import Types = require('../common/Types');
 import StyleLeakDetector from '../common/StyleLeakDetector';
@@ -33,18 +34,20 @@ export class Styles extends RX.Styles {
                 combinedStyles = _.extend(combinedStyles, subRuleSet);
             }
 
-            if ((combinedStyles.marginLeft !== undefined || combinedStyles.marginRight !== undefined ||
-                    combinedStyles.marginTop !== undefined || combinedStyles.marginBottom !== undefined) &&
-                    combinedStyles.margin !== undefined) {
-                console.error('Conflicting rules for margin specified.');
-                delete combinedStyles.margin;
-            }
+            if (AppConfig.isDevelopmentMode()) {
+                if ((combinedStyles.marginLeft !== undefined || combinedStyles.marginRight !== undefined ||
+                        combinedStyles.marginTop !== undefined || combinedStyles.marginBottom !== undefined) &&
+                        combinedStyles.margin !== undefined) {
+                    console.error('Conflicting rules for margin specified.');
+                    delete combinedStyles.margin;
+                }
 
-            if ((combinedStyles.paddingLeft !== undefined || combinedStyles.paddingRight !== undefined ||
-                    combinedStyles.paddingTop !== undefined || combinedStyles.paddingBottom !== undefined) &&
-                    combinedStyles.padding !== undefined) {
-                console.error('Conflicting rules for padding specified.');
-                delete combinedStyles.padding;
+                if ((combinedStyles.paddingLeft !== undefined || combinedStyles.paddingRight !== undefined ||
+                        combinedStyles.paddingTop !== undefined || combinedStyles.paddingBottom !== undefined) &&
+                        combinedStyles.padding !== undefined) {
+                    console.error('Conflicting rules for padding specified.');
+                    delete combinedStyles.padding;
+                }
             }
 
             if (combinedStyles.borderWidth || 
@@ -286,14 +289,15 @@ export class Styles extends RX.Styles {
 
         if (def.transform) {
             let transformStrings: string[] = [];
-            let animatedTransforms: { type: string, value: Object }[] = [];
+            let animatedTransforms: { [key: string]: Object } = {};
+            let staticTransforms: { [key: string]: string } = {};
 
             _.each(def.transform, (t: { [key: string]: string }) => {
                 _.each(_.keys(t), key => {
-                    // Animated transforms use AnimatedValue objects rather
+                    // Animated transforms use Animated.Value objects rather
                     // than strings. We need to store these separately.
                     if (typeof t[key] === 'object') {
-                        animatedTransforms.push({ type: key, value: t[key] });
+                        animatedTransforms[key] = t[key];
                     } else {
                         let value: string = t[key].toString();
                         if (key.indexOf('rotate') === 0) {
@@ -303,6 +307,7 @@ export class Styles extends RX.Styles {
                         }
 
                         transformStrings.push(key + '(' + value + ')');
+                        staticTransforms[key] = value;
                     }
                 });
             });
@@ -313,8 +318,9 @@ export class Styles extends RX.Styles {
                 def['transform'] = transformStrings.join(' ');
             }
 
-            if (animatedTransforms.length > 0) {
-                def['animatedTransform'] = animatedTransforms;
+            if (_.keys(animatedTransforms).length > 0) {
+                def['animatedTransforms'] = animatedTransforms;
+                def['staticTransforms'] = staticTransforms;
             }
         }
 
@@ -382,11 +388,13 @@ export class Styles extends RX.Styles {
             delete def.marginHorizontal;
         }
 
-        if ((def.marginHorizontal !== undefined || def.marginVertical !== undefined ||
-            def.marginLeft !== undefined || def.marginRight !== undefined ||
-            def.marginTop !== undefined || def.marginBottom !== undefined) && def.margin !== undefined) {
-            console.error('Conflicting rules for margin specified.');
-            delete def.margin;
+        if (AppConfig.isDevelopmentMode()) {
+            if ((def.marginHorizontal !== undefined || def.marginVertical !== undefined ||
+                    def.marginLeft !== undefined || def.marginRight !== undefined ||
+                    def.marginTop !== undefined || def.marginBottom !== undefined) && def.margin !== undefined) {
+                console.error('Conflicting rules for margin specified.');
+                delete def.margin;
+            }
         }
 
         if (def.paddingVertical !== undefined) {
@@ -401,11 +409,13 @@ export class Styles extends RX.Styles {
             delete def.paddingHorizontal;
         }
 
-        if ((def.paddingHorizontal !== undefined || def.paddingVertical !== undefined ||
-            def.paddingLeft !== undefined || def.paddingRight !== undefined ||
-            def.paddingTop !== undefined || def.paddingBottom !== undefined) && def.padding !== undefined) {
-            console.error('Conflicting rules for padding specified.');
-            delete def.padding;
+        if (AppConfig.isDevelopmentMode()) {
+            if ((def.paddingHorizontal !== undefined || def.paddingVertical !== undefined ||
+                    def.paddingLeft !== undefined || def.paddingRight !== undefined ||
+                    def.paddingTop !== undefined || def.paddingBottom !== undefined) && def.padding !== undefined) {
+                console.error('Conflicting rules for padding specified.');
+                delete def.padding;
+            }
         }
 
         // CSS doesn't support 'textDecorationLine'

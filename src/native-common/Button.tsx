@@ -10,9 +10,11 @@
 import assert = require('assert');
 import React = require('react');
 import RN = require('react-native');
+import PropTypes = require('prop-types');
 
-import Animated from './Animated';
 import AccessibilityUtil from './AccessibilityUtil';
+import Animated from './Animated';
+import AppConfig from '../common/AppConfig';
 import Styles from './Styles';
 import Types = require('../common/Types');
 import { isEqual } from '../common/lodashMini';
@@ -53,7 +55,19 @@ function applyMixin(thisObj: any, mixin: {[propertyName: string]: any}, properti
     });
 }
 
+export interface ButtonContext {
+    hasRxButtonAscendant?: boolean;
+}
+
 export class Button extends React.Component<Types.ButtonProps, {}> {
+    static contextTypes = {
+        hasRxButtonAscendant: PropTypes.bool
+    };
+
+    static childContextTypes = {
+        hasRxButtonAscendant: PropTypes.bool
+    };
+
     private _mixin_componentDidMount = RN.Touchable.Mixin.componentDidMount || noop;
     private _mixin_componentWillUnmount = RN.Touchable.Mixin.componentWillUnmount || noop;
 
@@ -67,13 +81,13 @@ export class Button extends React.Component<Types.ButtonProps, {}> {
 
     private _isMounted = false;
     private _hideTimeout: number|undefined;
-    private _buttonElement: RN.Animated.View|undefined;
+    private _buttonElement: RN.Animated.View|null = null;
     private _defaultOpacityValue: number|undefined;
     private _opacityAnimatedValue: RN.Animated.Value|undefined;
     private _opacityAnimatedStyle: Types.AnimatedViewStyleRuleSet|undefined;
 
-    constructor(props: Types.ButtonProps) {
-        super(props);
+    constructor(props: Types.ButtonProps, context: ButtonContext) {
+        super(props, context);
         applyMixin(this, RN.Touchable.Mixin, [
             // Properties that Button and RN.Touchable.Mixin have in common. Button needs
             // to dispatch these methods to RN.Touchable.Mixin manually.
@@ -82,6 +96,22 @@ export class Button extends React.Component<Types.ButtonProps, {}> {
         ]);
         this.state = this.touchableGetInitialState();
         this._setOpacityStyles(props);
+
+        if (context.hasRxButtonAscendant) {
+            if (AppConfig.isDevelopmentMode()) {
+                console.warn('Button components should not be embedded. Some APIs, e.g. Accessibility, will not work.');
+            }
+        }
+    }
+
+    protected _render(internalProps: RN.ViewProps): JSX.Element {
+        return (
+            <RN.Animated.View
+                { ...internalProps }
+             >
+                { this.props.children }
+            </RN.Animated.View>
+        );
     }
 
     render() {
@@ -95,27 +125,25 @@ export class Button extends React.Component<Types.ButtonProps, {}> {
 
         const opacityStyle = !this.props.disableTouchOpacityAnimation && this._opacityAnimatedStyle;
 
-        return (
-            <RN.Animated.View
-                ref={ this._onButtonRef }
-                style={ Styles.combine([_styles.defaultButton, this.props.style, opacityStyle,
-                    this.props.disabled && _styles.disabled]) }
-                accessibilityLabel={ this.props.accessibilityLabel || this.props.title }
-                accessibilityTraits={ accessibilityTrait }
-                accessibilityComponentType={ accessibilityComponentType }
-                importantForAccessibility={ importantForAccessibility }
-                onStartShouldSetResponder={ this.touchableHandleStartShouldSetResponder }
-                onResponderTerminationRequest={ this.touchableHandleResponderTerminationRequest }
-                onResponderGrant={ this.touchableHandleResponderGrant }
-                onResponderMove={ this.touchableHandleResponderMove }
-                onResponderRelease={ this.touchableHandleResponderRelease }
-                onResponderTerminate={ this.touchableHandleResponderTerminate }
-                shouldRasterizeIOS={ this.props.shouldRasterizeIOS }
-                onAccessibilityTapIOS={ this.props.onAccessibilityTapIOS }
-            >
-                { this.props.children }
-            </RN.Animated.View>
-        );
+        let internalProps: RN.ViewProps = {
+            ref: this._onButtonRef,
+            style: Styles.combine([_styles.defaultButton, this.props.style, opacityStyle,
+                this.props.disabled && _styles.disabled]),
+            accessibilityLabel: this.props.accessibilityLabel || this.props.title,
+            accessibilityTraits: accessibilityTrait,
+            accessibilityComponentType: accessibilityComponentType,
+            importantForAccessibility: importantForAccessibility,
+            onStartShouldSetResponder: this.touchableHandleStartShouldSetResponder,
+            onResponderTerminationRequest: this.touchableHandleResponderTerminationRequest,
+            onResponderGrant: this.touchableHandleResponderGrant,
+            onResponderMove: this.touchableHandleResponderMove,
+            onResponderRelease: this.touchableHandleResponderRelease,
+            onResponderTerminate: this.touchableHandleResponderTerminate,
+            shouldRasterizeIOS: this.props.shouldRasterizeIOS,
+            onAccessibilityTapIOS: this.props.onAccessibilityTapIOS
+        };
+
+        return this._render(internalProps);
     }
 
     componentDidMount() {
@@ -133,6 +161,10 @@ export class Button extends React.Component<Types.ButtonProps, {}> {
             // If opacity got updated as a part of props update, we need to reflect that in the opacity animation value
            this._setOpacityStyles(nextProps, this.props);
         }
+    }
+
+    getChildContext(): ButtonContext {
+        return { hasRxButtonAscendant: true };
     }
 
     setNativeProps(nativeProps: RN.ViewProps) {
@@ -221,7 +253,7 @@ export class Button extends React.Component<Types.ButtonProps, {}> {
         }
     }
 
-    private _onButtonRef = (btn: RN.Animated.View): void => {
+    private _onButtonRef = (btn: RN.Animated.View|null): void => {
         this._buttonElement = btn;
     }
 
@@ -289,7 +321,7 @@ export class Button extends React.Component<Types.ButtonProps, {}> {
         this._buttonElement.setNativeProps({
             style: [{
                 backgroundColor: _underlayInactive
-            }, this.props.style],
+            }, this.props.style]
         });
     }
 }

@@ -16,6 +16,97 @@ A new version of ReactXP will be released a monthly basis (approximately), follo
 
 ### Version History
 
+#### Version 0.51.1 of reactxp
+_Released 19 Jan 2018_
+
+Fixed regression in native implementation of Animated.View's blur() method.
+
+
+#### Version 0.2.3 of reactxp-video
+#### Version 1.0.15 of reactxp-navigator
+#### Version 0.2.8 of reactxp-imagesvg
+#### Version 0.1.7 of reactxp-virtuallistview
+_Released 18 Jan 2018_
+
+Updated for RN 0.51 compatibility.
+
+
+#### Version 0.51.0 of reactxp
+_Released 18 Jan 2018_
+
+Fixed focusable View condition for VoiceOver in web implementation.
+Exposed web-specific ariaRoleDescription prop to work around other VoiceOver issues.
+Updated RN for Windows UWP dependency.
+Fixed recent regression that broke focus and blur calls in iOS and Android implementations of AnimatedTextInput.
+
+#### Version 0.51.0-alpha.9 of reactxp
+_Released 17 Jan 2018_
+
+Removed console error related to animations of values not currently associated with any mounted component. It was too noisy.
+
+#### Version 0.51.0-alpha.8 of reactxp
+_Released 16 Jan 2018_
+
+Fixed bug in Windows UWP implementation related to selection ranges in TextInput.
+Fixed screen reader issue in Mac implementation.
+Removed ```textAlign``` prop from TextInput. It was extraneous, since it's already supported as a style attribute.
+Updated Windows UWP dependency to use the latest version of RN for UWP.
+Worked around issue with screen readers on Chrome browsers.
+Added currentTarget field back to SyntheticEvent.
+Added support for "switch" aria type (web implementation).
+Fixed recent regression in web animation code.
+
+#### Version 0.51.0-alpha.5 of reactxp
+_Released 11 Jan 2018_
+
+Eliminated limitation within RX.Button where only one child element was allowed.
+Fixed regression where native implementation of RX.View with onPress handler didn't provide touch feedback.
+
+#### Version 0.51.0-alpha.4 of reactxp
+_Released 10 Jan 2018_
+
+Added code to native implementation of RX.Network so it works with versions of RN before and after 0.48.x.
+Fixed regression in web implementation of RX.TextInput.
+Fixed bug that caused incorrect behavior of RX.Modal on native platforms.
+
+#### Version 0.51.0-alpha.2 of reactxp
+_Released 9 Jan 2018_
+
+Fixed bug in native implementation of RX.ActivityIndicator. It wasn't properly handling the delay prop.
+Added support in web implementation of RX.TextInput for custom keyboard types on mobile web browsers.
+Added focus and keyboard navigation support for native UWP platform.
+Added support for injection of HTML content into RX.WebView.
+Added support for postMessage and onMessage handler in RX.WebView for bidirectional communication.
+
+#### Version 0.51.0-alpha.1 of reactxp
+_Released 6 Jan 2018_
+
+Fixed break in device dimension change event due to change in RN.
+Removed use of RX.Button implementation within RX.View for native-common implementation.
+Fixed bug in web implementation of RX.Clipboard.getText. It shouldn't throw.
+Fixed timing bug in web implementation of GestureView.
+Fixed popup positioning for right-to-left languages in native-common implementation.
+Fixed bug in web implementation of TextInput that caused assertion in React.
+Breaking change: Removed 'cursor' prop from RX.Button. It was redundant with the 'cursor' style.
+New feature: RX.Input.key[Up|Down]Event now allow event subscribers to cancel the event.
+New feature: Changed RX.Modal.isDisplayed to accept undefined parameter, in which case it determines whether _any_ modal is displayed.
+New feature: Added RX.Popup.isDisplayed method.
+Reimplemented web implementation of animation APIs. Removed many limitations of previous implementation and fixed several bugs. Documented remaining limitations.
+Fixed bug in web implementation of RX.TextInput that resulted in assertions within React.
+Fixed bug in web implementation of RX.Picker. It wasn't correctly combining styles.
+Added support in web implementation of RX.TextInput for keyboard type (applicable on mobile web browsers).
+Removed use of deprecated RX.NetInfo.fetch method.
+
+#### Version 0.46.6 of reactxp
+_Released 13 Dec 2017_
+
+Fixed potential crash in web implementation of RX.ScrollView. 
+Fixed bug in UWP implementation of RX.Popup, allowing background to be clickable.
+In web implementation of RX.ScrollView, added support for clicking on scroll bar to adjust position of thumb.
+Added dev warning when using nested RX.Button items.
+Fixed a potential crash in web implementation of RX.GestureView.
+Implemented drag-and-drop support in UWP implementation of RX.View.
+
 #### Version 0.46.5 of reactxp
 _Released 31 Oct 2017_
 

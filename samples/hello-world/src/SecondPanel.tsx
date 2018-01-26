@@ -56,27 +56,9 @@ const styles = {
     })
 };
 
-const alertStyles = {
-    body: RX.Styles.createViewStyle({
-        backgroundColor: '#f5fcff'
-    }),
-    titleText: RX.Styles.createTextStyle({
-        fontSize: 20
-    }),
-    messageText: RX.Styles.createTextStyle({
-        marginVertical: 12
-    }),
-    defaultButton: RX.Styles.createViewStyle({
-        borderRadius: 12,
-        backgroundColor: '#7d88a9'
-    }),
-    cancelButton: RX.Styles.createButtonStyle({
-        backgroundColor: 'red'
-    })
-};
-
 class SecondPanel extends RX.Component<SecondPanelProps, SecondPanelState> {
     private _progressTimerToken: number;
+    private _mountedVideo: RXVideo;
 
     constructor(props: SecondPanelProps) {
         super(props);
@@ -117,7 +99,7 @@ class SecondPanel extends RX.Component<SecondPanelProps, SecondPanelState> {
                         Here is an SVG image using the ImageSvg extension
                     </RX.Text>
                     <ProgressIndicator
-                        style={ styles.progressMargin }
+                        style={ styles.progressMargin as any }
                         progress={ this.state.progressValue }
                         fillColor={ '#ddd' }
                         size={ 32 }
@@ -127,26 +109,19 @@ class SecondPanel extends RX.Component<SecondPanelProps, SecondPanelState> {
                         Here is a video using the Video extension
                     </RX.Text>
                     <RXVideo
-                        ref='video'
-                        style={ styles.video }
+                        ref={ this._onMountVideo }
+                        style={ styles.video as any }
                         source={ 'https://www.w3schools.com/html/mov_bbb.mp4' }
                         loop={ true }
                         onCanPlay={ this._playVideo }
                     />
-                    <RX.Button style={ styles.roundButton } onPress={ this._onPressAlert }>
-                        <RX.Text style={ styles.buttonText }>
-                            See an Alert
-                        </RX.Text>
-                    </RX.Button>
-
-                    <RX.Button style={ styles.roundButton } onPress={ this._onPressThemedAlert }>
-                        <RX.Text style={ styles.buttonText }>
-                            See a themed Alert
-                        </RX.Text>
-                    </RX.Button>
                 </RX.View>
             </RX.ScrollView>
         );
+    }
+
+    private _onMountVideo = (component: RXVideo|null) => {
+        this._mountedVideo = component;
     }
 
     private _onPressBack = () => {
@@ -154,10 +129,9 @@ class SecondPanel extends RX.Component<SecondPanelProps, SecondPanelState> {
     }
 
     private _playVideo = () => {
-        const video = this.refs['video'] as RXVideo;
-        if (video) {
-            video.mute(true);
-            video.play();
+        if (this._mountedVideo) {
+            this._mountedVideo.mute(true);
+            this._mountedVideo.play();
         }
     }
 
@@ -182,29 +156,6 @@ class SecondPanel extends RX.Component<SecondPanelProps, SecondPanelState> {
     // extra work within React's virtual DOM diffing mechanism.
     private _onChangeToggle = (newValue: boolean) => {
         this.setState({ toggleValue: newValue });
-    }
-
-    private _onPressAlert = () => {
-        RX.Alert.show('This is an Alert', 'Do you like it?', [
-            { text: 'I like it!' },
-            { style: 'cancel', text: 'Close this' }
-        ]);
-    }
-    
-    private _onPressThemedAlert = () => {
-        let theme: RX.Types.AlertModalTheme = {
-            bodyStyle: alertStyles.body,
-            buttonStyle: alertStyles.defaultButton,
-            buttonTextStyle: styles.buttonText,
-            cancelButtonStyle: alertStyles.cancelButton,
-            titleTextStyle: alertStyles.titleText,
-            messageTextStyle: alertStyles.messageText
-        };
-
-        RX.Alert.show('This is a themed Alert', 'Do you like it as well?', [
-            { text: 'I like it!' },
-            { style: 'cancel', text: 'Close this' }
-        ], { theme : theme });
     }
 }
 

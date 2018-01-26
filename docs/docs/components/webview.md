@@ -41,6 +41,11 @@ interface WebViewErrorState {
     domain: string;
     code: string;
 }
+
+interface WebViewSource {
+    html: string;
+    baseUrl?: string; // Native only
+}
 ```
 
 ## Props
@@ -49,7 +54,7 @@ interface WebViewErrorState {
 domStorageEnabled: boolean = true; // Native only
 
 // JavaScript code that is injected into the control and executed
-injectedJavaScript: string = undefined;
+injectedJavaScript: string = undefined; // Native only
 
 // Is JavaScript executed within the control?
 javaScriptEnabled: boolean = true;
@@ -66,6 +71,9 @@ onLoad: (e: SyntheticEvent) => void = undefined;
 // Called when the contents start to load
 onLoadStart: (e: SyntheticEvent) => void = undefined; // Native only
 
+// Called when a message is posted from within a WebView
+onMessage: (e: WebViewMessageEvent) => void = undefined;
+
 // Called when the navigation state changes
 onNavigationStateChange: (navigationState: WebViewNavigationState) => void;
 
@@ -74,6 +82,9 @@ sandbox: WebViewSandboxMode = None; // Web only
 
 // Zooms the page contents to fit the available space
 scalesPageToFit: boolean = false;
+
+// HTML to display in webview (if url is not specified)
+source: WebViewSource = undefined;
 
 // Start loading immediately or wait for reload?
 startInLoadingState: boolean = true; // Native only
@@ -95,14 +106,11 @@ goBack();
 goForward();
 
 // Posts a message to the web control, allowing for communication between
-// the app and the JavaScript code running within the web control
-// Available only on web
+// the app and the JavaScript code running within the web control. On native
+// platforms, the targetOrigin is ignored.
 postMessage(message: string, targetOrigin?: string = '*'): void;
 
 // Force the page to reload
 reload();
 ```
-
-
-
 

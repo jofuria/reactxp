@@ -26,7 +26,13 @@ interface PopupOptions {
     // "anchor" for the popup. Often a button.
     getAnchor: () => React.Component<any, any>;
 
-    // Renders the contents of the popup.
+    // Renders the contents of the popup. This is called twice. The
+    // first time it is called, the parameters are all defaults
+    // (default position and 0 offset and dimensions). This allows
+    // the popup to be measured and positioned. It is called a second
+    // time with the position, offset and dimensions specified. This
+    // allows the method to modify the appearance based on these
+    // parameters. The dimensions should not be modified, however.
     renderPopup: (anchorPosition: PopupPosition, anchorOffset: number,
         popupWidth: number, popupHeight: number) => ReactNode;
 
@@ -94,6 +100,9 @@ dismissAll(): void;
 // Displays a popup. Returns true if successful, false if the popup is
 // already displayed
 show(options: PopupOptions, popupId: string, showDelay: number = 0): boolean;
+
+// Indicates whether the specified popup is displayed. If no id provided indicates if some popup is displayed.
+isDisplayed(popupId?: string): boolean;
 ```
 
 ## Sample Usage
@@ -115,7 +124,7 @@ onHoverEnd() {
 displayPopup() {
     let popupOptions: RX.Types.PopupOptions = {
         getAnchor: () => {
-            return this.refs['myButton'];
+            return this._mountedButton;
         },
         renderPopup: (anchorPosition: Types.PopupPosition, anchorOffset: number,
                 popupWidth: number, popupHeight: number) => {

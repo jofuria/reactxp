@@ -14,6 +14,7 @@ import _ = require('./lodashMini');
 
 import Accessibility from './Accessibility';
 import AccessibilityUtil from './AccessibilityUtil';
+import AppConfig from '../common/AppConfig';
 import { default as FrontLayerViewManager } from './FrontLayerViewManager';
 import MainViewStore from './MainViewStore';
 import Styles from './Styles';
@@ -143,6 +144,7 @@ class RootViewUsingStore extends BaseRootView<BaseRootViewProps> {
     }
 
     componentWillUnmount(): void {
+        super.componentWillUnmount();
         MainViewStore.unsubscribe(this._changeListener);
     }
 
@@ -174,7 +176,9 @@ class RootViewUsingProps extends BaseRootView<RootViewPropsWithMainViewType> {
         super(props);
 
         if (!props.reactxp_rootViewId) {
-            console.warn('Some APIs require a value for reactxp_rootViewId');
+            if (AppConfig.isDevelopmentMode()) {
+                console.warn('Some APIs require a value for reactxp_rootViewId');
+            }
             this._rootViewId = null;
         } else {
             this._rootViewId = props.reactxp_rootViewId;

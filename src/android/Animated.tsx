@@ -18,10 +18,10 @@ import Types = require('../common/Types');
 var ReactAnimatedText = RN.Animated.createAnimatedComponent(RXText);
 
 export class AnimatedText extends CommonAnimated.Text {
-   render() {
+    render() {
         return (
             <ReactAnimatedText
-                ref='nativeComponent'
+                ref={ this._onMount }
                 { ...this.props }
                 style={ this.props.style }
             >
@@ -44,11 +44,9 @@ export var Animated = {
     parallel: CommonAnimated.parallel,
     sequence: CommonAnimated.sequence,
 
-    // NOTE: Direct access to "Value" will be going away in the near future.
-    // Please move to createValue and interpolate instead.
     Value: RN.Animated.Value,
     createValue: (initialValue: number) => new RN.Animated.Value(initialValue),
-    interpolate: (animatedValue: RN.Animated.Value, inputRange: number[], outputRange: string[]) => {
+    interpolate: (animatedValue: Types.AnimatedValue, inputRange: number[], outputRange: string[]) => {
         return animatedValue.interpolate({
             inputRange: inputRange,
             outputRange: outputRange

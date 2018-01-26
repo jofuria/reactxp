@@ -13,6 +13,7 @@ import PropTypes = require('prop-types');
 
 import AccessibilityUtil from './AccessibilityUtil';
 import AnimateListEdits from './listAnimations/AnimateListEdits';
+import AppConfig from '../common/AppConfig';
 import restyleForInlineText = require('./utils/restyleForInlineText');
 import Styles from './Styles';
 import Types = require('../common/Types');
@@ -120,7 +121,9 @@ export class View extends ViewBase<Types.ViewProps, {}> {
         }
 
         if (containerStyles.position !== 'relative') {
-            console.error('View: importantForLayout property is applicable only for a view with relative position');
+            if (AppConfig.isDevelopmentMode()) {
+                console.error('View: importantForLayout property is applicable only for a view with relative position');
+            }
             return null;
         }
 
@@ -214,13 +217,15 @@ export class View extends ViewBase<Types.ViewProps, {}> {
         return childContext;
     }
 
-    protected _getContainerRef(): React.ReactInstance {
-        return this;
+    protected _getContainer(): HTMLElement|null {
+        return ReactDOM.findDOMNode(this) as HTMLElement;
     }
 
     setFocusRestricted(restricted: boolean) {
         if (!this._focusManager || !this.props.restrictFocusWithin) {
-            console.error('View: setFocusRestricted method requires restrictFocusWithin property to be set to true');
+            if (AppConfig.isDevelopmentMode()) {
+                console.error('View: setFocusRestricted method requires restrictFocusWithin property to be set to true');
+            }
             return;
         }
 
@@ -233,7 +238,9 @@ export class View extends ViewBase<Types.ViewProps, {}> {
 
     setFocusLimited(limited: boolean) {
         if (!this._focusManager || !this.props.limitFocusWithin) {
-            console.error('View: setFocusLimited method requires limitFocusWithin property to be set to true');
+            if (AppConfig.isDevelopmentMode()) {
+                console.error('View: setFocusLimited method requires limitFocusWithin property to be set to true');
+            }
             return;
         }
 
@@ -251,7 +258,7 @@ export class View extends ViewBase<Types.ViewProps, {}> {
         const ariaRole = AccessibilityUtil.accessibilityTraitToString(this.props.accessibilityTraits);
         const ariaSelected = AccessibilityUtil.accessibilityTraitToAriaSelected(this.props.accessibilityTraits);
         const isAriaHidden = AccessibilityUtil.isHidden(this.props.importantForAccessibility);
-        const ariaLive = this.props.accessibilityLiveRegion ? 
+        const ariaLive = this.props.accessibilityLiveRegion ?
             AccessibilityUtil.accessibilityLiveRegionToString(this.props.accessibilityLiveRegion) :
             undefined;
 
@@ -264,6 +271,7 @@ export class View extends ViewBase<Types.ViewProps, {}> {
             'aria-hidden': isAriaHidden,
             'aria-selected': ariaSelected,
             'aria-labelledby': this.props.ariaLabelledBy,
+            'aria-roledescription': this.props.ariaRoleDescription,
             'aria-live': ariaLive,
             onContextMenu: this.props.onContextMenu,
             onMouseEnter: this.props.onMouseEnter,
@@ -316,10 +324,13 @@ export class View extends ViewBase<Types.ViewProps, {}> {
     componentWillReceiveProps(nextProps: Types.ViewProps) {
         super.componentWillReceiveProps(nextProps);
 
-        if (!!this.props.restrictFocusWithin !== !!nextProps.restrictFocusWithin) {
-            console.error('View: restrictFocusWithin is readonly and changing it during the component life cycle has no effect');
-        } else if (!!this.props.limitFocusWithin !== !!nextProps.limitFocusWithin) {
-            console.error('View: limitFocusWithin is readonly and changing it during the component life cycle has no effect');
+        if (AppConfig.isDevelopmentMode()) {
+            if (!!this.props.restrictFocusWithin !== !!nextProps.restrictFocusWithin) {
+                console.error('View: restrictFocusWithin is readonly and changing it during the component life cycle has no effect');
+            }
+            if (!!this.props.limitFocusWithin !== !!nextProps.limitFocusWithin) {
+                console.error('View: limitFocusWithin is readonly and changing it during the component life cycle has no effect');
+            }
         }
     }
 
@@ -347,8 +358,11 @@ export class View extends ViewBase<Types.ViewProps, {}> {
 }
 
 applyFocusableComponentMixin(View, function (this: View, nextProps?: Types.ViewProps) {
-    let tabIndex = nextProps && ('tabIndex' in nextProps) ? nextProps.tabIndex : this.props.tabIndex;
-    return tabIndex !== undefined && tabIndex !== -1;
+    // VoiceOver with the VoiceOver key combinations (Ctrl+Option+Left/Right) focuses
+    // <div>s when whatever tabIndex is set (even if tabIndex=-1). So, View is focusable
+    // when tabIndex is not undefined.
+    const tabIndex = nextProps && ('tabIndex' in nextProps) ? nextProps.tabIndex : this.props.tabIndex;
+    return tabIndex !== undefined;
 });
 
 export default View;

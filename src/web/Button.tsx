@@ -9,8 +9,10 @@
 
 import React = require('react');
 import ReactDOM = require('react-dom');
+import PropTypes = require('prop-types');
 
 import AccessibilityUtil from './AccessibilityUtil';
+import AppConfig from '../common/AppConfig';
 import Styles from './Styles';
 import Types = require('../common/Types');
 import { applyFocusableComponentMixin } from './utils/FocusManager';
@@ -46,14 +48,39 @@ UserInterface.keyboardNavigationEvent.subscribe(isNavigatingWithKeyboard => {
     _isNavigatingWithKeyboard = isNavigatingWithKeyboard;
 });
 
+export interface ButtonContext {
+    hasRxButtonAscendant?: boolean;
+}
+
 export class Button extends React.Component<Types.ButtonProps, {}> {
-    private _lastMouseDownTime: number = 0;
+    static contextTypes = {
+        hasRxButtonAscendant: PropTypes.bool
+    };
+
+    static childContextTypes = {
+        hasRxButtonAscendant: PropTypes.bool
+    };
+
     private _lastMouseDownEvent: Types.SyntheticEvent;
     private _ignoreClick = false;
     private _longPressTimer: number|undefined;
     private _isMouseOver = false;
     private _isFocusedWithKeyboard = false;
     private _isHoverStarted = false;
+
+    constructor(props: Types.ButtonProps, context: ButtonContext) {
+        super(props, context);
+
+        if (context.hasRxButtonAscendant) {
+            if (AppConfig.isDevelopmentMode()) {
+                console.warn('Button components should not be embedded. Some APIs, e.g. Accessibility, will not work.');
+            }
+        }
+    }
+
+    getChildContext(): ButtonContext {
+        return { hasRxButtonAscendant: true };
+    }
 
     render() {
         const ariaRole = AccessibilityUtil.accessibilityTraitToString(this.props.accessibilityTraits,
@@ -134,10 +161,9 @@ export class Button extends React.Component<Types.ButtonProps, {}> {
             combinedStyles.opacity = 0.5;
         }
 
-        if (this.props.disabled) {
-            combinedStyles['cursor'] = 'default';
-        } else {
-            combinedStyles['cursor'] = this.props.cursor || 'pointer';
+        // Default to 'pointer' cursor for enabled buttons unless otherwise specified.
+        if (!combinedStyles['cursor']) {
+            combinedStyles['cursor'] = this.props.disabled ? 'default' : 'pointer';
         }
 
         return combinedStyles;
@@ -149,13 +175,12 @@ export class Button extends React.Component<Types.ButtonProps, {}> {
         }
     }
 
-    private _onMouseDown = (e: Types.SyntheticEvent) => {
+    private _onMouseDown = (e: React.SyntheticEvent<any>) => {
         if (this.props.onPressIn) {
             this.props.onPressIn(e);
         }
 
         if (this.props.onLongPress) {
-            this._lastMouseDownTime = Date.now().valueOf();
             this._lastMouseDownEvent = e;
             e.persist();
 
